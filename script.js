@@ -19,14 +19,15 @@ const getMovieSuggestions = async (query) => {
 
     if (data.Response === 'True') {
       const suggestions = data.Search;
-      suggestionsList.innerHTML = suggestions
-        .map((movie) => `<li class="suggestion-item" data-id="${movie.imdbID}">${movie.Title} (${movie.Year})</li>`)
-        .join('');
+      suggestionsList.innerHTML = suggestions.length > 0
+        ? suggestions.map((movie) => `<li class="suggestion-item" data-id="${movie.imdbID}">${movie.Title} (${movie.Year})</li>`).join('')
+        : '<li>No suggestions found.</li>';
     } else {
       suggestionsList.innerHTML = '<li>No suggestions found.</li>';
     }
   } catch (error) {
     console.error('Error fetching movie suggestions:', error);
+    suggestionsList.innerHTML = '<li>Error fetching suggestions. Please try again later.</li>';
   }
 };
 
@@ -38,29 +39,36 @@ movieSearch.addEventListener('input', (event) => {
 
 // Event listener for clicking on a suggestion
 suggestionsList.addEventListener('click', async (event) => {
-  const imdbID = event.target.dataset.id;
-  
-  if (imdbID) {
-    try {
-      const response = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${omdbApiKey}`);
-      const movieData = await response.json();
+  if (event.target.classList.contains('suggestion-item')) {
+    const imdbID = event.target.dataset.id;
 
-      // Display the selected movie details
-      movieInfo.innerHTML = `
-        <div class="movie">
-          <img src="${movieData.Poster}" alt="${movieData.Title}">
-          <div class="movie-details">
-            <h2>${movieData.Title} (${movieData.Year})</h2>
-            <p><strong>Genre:</strong> ${movieData.Genre}</p>
-            <p><strong>Plot:</strong> ${movieData.Plot}</p>
-            <p><strong>IMDb Rating:</strong> ${movieData.imdbRating}</p>
-            <p><strong>Rotten Tomatoes Rating:</strong> ${movieData.Ratings && movieData.Ratings.find(rating => rating.Source === 'Rotten Tomatoes') ? movieData.Ratings.find(rating => rating.Source === 'Rotten Tomatoes').Value : 'Not available'}</p>
+    if (imdbID) {
+      try {
+        const response = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${omdbApiKey}`);
+        const movieData = await response.json();
+
+        // Display the selected movie details
+        movieInfo.innerHTML = `
+          <div class="movie">
+            <img src="${movieData.Poster}" alt="${movieData.Title}">
+            <div class="movie-details">
+              <h2>${movieData.Title} (${movieData.Year})</h2>
+              <p><strong>Genre:</strong> ${movieData.Genre}</p>
+              <p><strong>Plot:</strong> ${movieData.Plot}</p>
+              <p><strong>IMDb Rating:</strong> ${movieData.imdbRating}</p>
+              <p><strong>Rotten Tomatoes Rating:</strong> ${
+                movieData.Ratings && movieData.Ratings.find(rating => rating.Source === 'Rotten Tomatoes') 
+                ? movieData.Ratings.find(rating => rating.Source === 'Rotten Tomatoes').Value 
+                : 'Not available'
+              }</p>
+            </div>
           </div>
-        </div>
-      `;
-      suggestionsList.innerHTML = ''; // Clear suggestions after selection
-    } catch (error) {
-      console.error('Error fetching movie details:', error);
+        `;
+        suggestionsList.innerHTML = ''; // Clear suggestions after selection
+        movieSearch.value = ''; // Clear the input field
+      } catch (error) {
+        console.error('Error fetching movie details:', error);
+      }
     }
   }
 });
