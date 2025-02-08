@@ -42,7 +42,7 @@ suggestionsList.addEventListener('click', async (event) => {
   
   if (imdbID) {
     try {
-      const response = await fetch(`http://www.omdbapi.com/?i=${imdbID}&apikey=${omdbApiKey}`);
+      const response = await fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${omdbApiKey}`);
       const movieData = await response.json();
 
       // Display the selected movie details
